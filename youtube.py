@@ -1,4 +1,4 @@
-#python scripting
+#Python script
 from googleapiclient.discovery import build
 import pymongo
 import mysql.connector
@@ -310,21 +310,37 @@ def videolist_table():
             duration_str = row['duration']
 
             try:
-                # Try parsing with format "PT%MM%SS"
+                # Try with format "PT%MM%SS"
                 duration_timedelta = datetime.strptime(duration_str, "PT%MM%SS").time()
+                total_seconds = duration_timedelta.minute * 60 + duration_timedelta.second
             except ValueError:
+
                 try:
-                    # If the first format fails, try parsing with format "PT%SS"
+                    # If the first format fails, try with format "PT%SS"
                     duration_timedelta = datetime.strptime(duration_str, "PT%SS").time()
+                    total_seconds = duration_timedelta.second
                 except ValueError:
+
                     try:
-                        # If the second format fails, try parsing with format "PT%MM"
-                        duration_timedelta = datetime.strptime(duration_str, "PT%MM").time()
+                        # If the second format fails, try with format "PT%MM"
+                            duration_timedelta = datetime.strptime(duration_str, "PT%MM").time()
+                            total_seconds = duration_timedelta.minute * 60
                     except ValueError:
-                        print(f"Invalid duration format: {duration_str}")
+
+                        try:
+                            # If the third format fails, try with format "POD"
+                            duration_timedelta = datetime.strptime(duration_str, "P0D").time()
+                            total_seconds = 0
+                        except ValueError:
+
+                            try:
+                                # If the forth format fails, try with format "PT%HH%MM%SS"
+                                duration_timedelta = datetime.strptime(duration_str, "PT%HH%MM%SS").time()
+                                total_seconds = duration_timedelta.hour * 60 * 60 + duration_timedelta.minute * 60 + duration_timedelta.second               
+                            except ValueError:
+                                print(f"Invalid duration format: {duration_str}")
 
             # Calculate the total seconds in the timedelta
-            total_seconds = duration_timedelta.minute * 60 + duration_timedelta.second
             # Convert the total seconds to an integer
             duration_seconds = int(total_seconds)
 
@@ -396,7 +412,6 @@ def comment_list_table():
             comment_list.append(i['comment_information'][n])
         
     df3=pd.DataFrame(comment_list)
-    df3
     
     #Inserting values into table
 
@@ -423,9 +438,8 @@ def comment_list_table():
 def sql_tables():
     channel_table()
     playlist_table()
-    videolist_table()
     comment_list_table()
-
+    videolist_table()
     return 'created'
 
 #creating function to display table for channel details,playlist,video details & comments
@@ -493,8 +507,8 @@ channel_id=st.text_input("Enter Channel ID")
 
 if st.button("collecting & storing data"):
     c_id=[]
-    db=connection['youtube']
-    col=db['channel_details']
+    db=connection['youtube1']
+    col=db['ychannel_details']
     for i in col.find({},{'_id':0,'channel_information':1}):
         c_id.append(i['channel_information']['channel_id'])
 
@@ -507,7 +521,7 @@ if st.button("collecting & storing data"):
 
 #creating button for migrating data to SQL
 
-if st.button("Migrate data to SQL"):
+if st.button("Migrate To SQL"):
     Table_view=sql_tables()
     st.success(Table_view)
 
@@ -519,12 +533,15 @@ if show_table=="Channels":
 elif show_table=="Playlists":
     show_playlist_table()
 
-elif show_table=="Videos":
-    show_video_table()
-    
-else:
+elif show_table=="Comments":
     show_comment_table()
 
+elif show_table=="Videos":
+    show_video_table()
+
+else:
+    show_table==' '
+    
 mydb=mysql.connector.connect(host='localhost',
                         user='root',
                         password='12345',

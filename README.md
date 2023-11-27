@@ -1,10 +1,10 @@
-#Required Libraries:
+Required Libraries:
 
-google-api-python-client/n
-pymongo
-mysql
-pandas
-streamlit
+1.google-api-python-client/n
+2.pymongo
+3.mysql
+4.pandas
+5.streamlit
 
 
 This project is about Youtube Data Harvesting and Warehousing.This project is done with the help of MongoDB,Mysql and Streamlit application.
@@ -20,10 +20,10 @@ This project is about Youtube Data Harvesting and Warehousing.This project is do
 5.With the help of Streamlit application,datas can be viewed in web browser.It is an open-source app framework in which we can create web apps from data scripts in pure Python and  can customize, deploy, and share your apps with no front-end experience required.
 
 
-#Skills take away:
+Skills take away:
 
-Python scripting,
-API integration,
-Data Collection,
-Data Management using MongoDB and SQL,
-Streamlit
+1.Python scripting,
+2.API integration,
+3.Data Collection,
+4.Data Management using MongoDB and SQL,
+5.Streamlit

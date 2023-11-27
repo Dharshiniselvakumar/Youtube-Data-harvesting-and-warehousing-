@@ -13,6 +13,7 @@ streamlit
 
 
 
+
 This project is about Youtube Data Harvesting and Warehousing.This project is done with the help of MongoDB,Mysql and Streamlit application.
 
 1.This project script is written by use of Python.It is a programming language and use to understand.
@@ -24,6 +25,7 @@ This project is about Youtube Data Harvesting and Warehousing.This project is do
 4.By using Mysql as data lake,migrated data from mongoDB to Mysql. A database organizes data into one or more data tables in which data may be related to each other(Structed Query Language).
 
 5.With the help of Streamlit application,datas can be viewed in web browser.It is an open-source app framework in which we can create web apps from data scripts in pure Python and  can customize, deploy, and share your apps with no front-end experience required.
+
 
 
 Skills take away:

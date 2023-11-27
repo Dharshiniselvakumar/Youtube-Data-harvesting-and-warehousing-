@@ -1,18 +1,15 @@
 Required Libraries:
 
-1.google-api-python-client 
+google-api-python-client 
 
-2.pymongo
+pymongo
 
-3.mysql
+mysql
 
-4.pandas
-
-
-5.streamlit
+pandas
 
 
-
+streamlit
 
 
 
@@ -31,8 +28,12 @@ This project is about Youtube Data Harvesting and Warehousing.This project is do
 
 Skills take away:
 
-1.Python scripting,
-2.API integration,
-3.Data Collection,
-4.Data Management using MongoDB and SQL,
-5.Streamlit
+Python scripting
+
+API integration
+
+Data Collection
+
+Data Management using MongoDB and SQL
+
+Streamlit

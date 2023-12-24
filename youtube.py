@@ -8,6 +8,9 @@ import streamlit as st
 
 api_key='AIzaSyBDd8ei9IHIOM_LJx8CV0HlT-FO3yDHa_k'
 youtube=build('youtube','v3',developerKey=api_key)
+#api service name=youtube
+#verion=v3
+#credential=api key
 
 #getting channel info
 def get_channel_info(channel_id):
@@ -82,14 +85,17 @@ def get_comment_info(video_details):
     Comment_data=[]
     try:
         for video_id in video_details:
-            request = youtube.commentThreads().list(part='snippet',videoId=video_id,maxResults=100)
+            request = youtube.commentThreads().list(part='snippet',maxResults=100,videoId=video_id)
             response = request.execute()
             for i in response['items']:
-                        data=dict(comment_Id=i['snippet']['topLevelComment']['id'],
+                        data=dict(channel_id=i['snippet']['channelId'],
+                                comment_Id=i['snippet']['topLevelComment']['id'],
                                 video_Id=i['snippet']['topLevelComment']['snippet']['videoId'],
                                 Comment_Text=i['snippet']['topLevelComment']['snippet']['textDisplay'],
                                 Comment_author=i['snippet']['topLevelComment']['snippet']['authorDisplayName'],
-                                Comment_published=i['snippet']['topLevelComment']['snippet']['publishedAt'])
+                                Comment_published=i['snippet']['topLevelComment']['snippet']['publishedAt']
+                                
+                                )
                         Comment_data.append(data)
     except:
         pass
@@ -139,20 +145,18 @@ def channel_info(channel_id):
     col.insert_one({'channel_information':channel_details,'playlist_information':playlist_details,'video_information':video_details,'comment_information':comment_details})
     return 'uploaded'
 
+#col.delete_many({})
   
 #Creating SQL tables and migrating data from mongoDB
 
 #Creating channel_table
 
-def channel_table(): 
+def channel_table(channel_id): 
     mydb=mysql.connector.connect(host='localhost',
                             user='root',
                             password='12345',
                             database='youtube1')#connector
     mycursor=mydb.cursor()
-    drop_query='''drop table if exists channels'''
-    mycursor.execute(drop_query)
-    mydb.commit()
 
     try:
         sql='''create table if not exists channels(channel_name varchar(100),
@@ -173,7 +177,11 @@ def channel_table():
     db=connection['youtube1']
     col=db['ychannel_details']
     for i in col.find({},{'_id':0,'channel_information':1}):
-        channel_list.append(i['channel_information'])
+        if((i['channel_information']['channel_id']) == channel_id):
+            channel_list.append(i['channel_information'])
+    
+    
+    
     df=pd.DataFrame(channel_list) 
 
     #Inserting values into table
@@ -201,17 +209,16 @@ def channel_table():
         except:
             print('ERROR')
 
+
+
 #Creating playlist_table
 
-def playlist_table():
+def playlist_table(channel_id):
     mydb=mysql.connector.connect(host='localhost',
                             user='root',
                             password='12345',
                             database='youtube1')#connector
     mycursor=mydb.cursor()
-    drop_query='''drop table if exists playlists'''
-    mycursor.execute(drop_query)
-    mydb.commit()
     
     sql='''create table if not exists playlists(playlist_id varchar(100) primary key,
                                             Title varchar(500),
@@ -228,8 +235,9 @@ def playlist_table():
     db=connection['youtube1']
     col=db['ychannel_details']
     for i in col.find({},{'_id':0,'playlist_information':1}):
-        for n in range(len(i['playlist_information'])):
-            playlist_list.append(i['playlist_information'][n])
+        for n in range(len(i['playlist_information'])): 
+            if((i['playlist_information'][n]['channel_id']) == channel_id):
+                playlist_list.append(i['playlist_information'][n])
         
     df1=pd.DataFrame(playlist_list)
 
@@ -258,16 +266,13 @@ def playlist_table():
 
 #Creating videolist_table
 
-def videolist_table():
+def videolist_table(channel_id):
               
         mydb=mysql.connector.connect(host='localhost',
                             user='root',
                             password='12345',
                             database='youtube1')#connector
         mycursor=mydb.cursor()
-        drop_existing_table='''drop table if exists videolists'''
-        mycursor.execute(drop_existing_table)
-        mydb.commit()
         
         sql='''create table if not exists videolists(channel_name varchar(100),
                                                 channel_id varchar(100),
@@ -294,7 +299,8 @@ def videolist_table():
         col=db['ychannel_details']
         for i in col.find({},{'_id':0,'video_information':1}):
             for n in range(len(i['video_information'])):
-                video_list.append(i['video_information'][n])
+                if((i['video_information'][n]['channel_id']) == channel_id):
+                    video_list.append(i['video_information'][n])
         
         df2=pd.DataFrame(video_list)
 
@@ -382,18 +388,16 @@ def videolist_table():
             
 #Creating comment_list_table           
 
-def comment_list_table():
+def comment_list_table(channel_id):
 
     mydb=mysql.connector.connect(host='localhost',
                             user='root',
                             password='12345',
                             database='youtube1')#connector
     mycursor=mydb.cursor()
-    drop_query='''drop table if exists comment_lists'''
-    mycursor.execute(drop_query)
-    mydb.commit()
     
-    sql='''create table if not exists comment_lists(comment_Id varchar(100) primary key,
+    sql='''create table if not exists comment_lists(channel_id varchar(100),
+                                            comment_Id varchar(100) primary key,
                                             video_Id varchar(100),
                                             Comment_Text text,
                                             Comment_author varchar(200),
@@ -409,7 +413,8 @@ def comment_list_table():
     col=db['ychannel_details']
     for i in col.find({},{'_id':0,'comment_information':1}):
         for n in range(len(i['comment_information'])):
-            comment_list.append(i['comment_information'][n])
+            if((i['comment_information'][n]['channel_id']) == channel_id):
+                comment_list.append(i['comment_information'][n])
         
     df3=pd.DataFrame(comment_list)
     
@@ -418,13 +423,15 @@ def comment_list_table():
     for index,row in df3.iterrows():
     # formatting the 'Comment_published' value
         Comment_published = datetime.strptime(row['Comment_published'], '%Y-%m-%dT%H:%M:%SZ')
-        sql='''insert into comment_lists(comment_Id,
+        sql='''insert into comment_lists(channel_id,
+                                    comment_Id,
                                     video_Id,
                                     Comment_Text,
                                     Comment_author,
                                     Comment_published)
-                                    values(%s,%s,%s,%s,%s)'''
-        values=(row['comment_Id'],
+                                    values(%s,%s,%s,%s,%s,%s)'''
+        values=(row['channel_id'],
+                row['comment_Id'],
                 row['video_Id'],
                 row['Comment_Text'],
                 row['Comment_author'],
@@ -434,13 +441,30 @@ def comment_list_table():
         mydb.commit()
     
 #defining all tables in single function
+        
    
-def sql_tables():
-    channel_table()
-    playlist_table()
-    comment_list_table()
-    videolist_table()
-    return 'created'
+def sql_tables(channel_id):
+    mydb=mysql.connector.connect(host='localhost',
+                            user='root',
+                            password='12345',
+                            database='youtube1')#connector
+    mycursor=mydb.cursor()
+
+ # Check if the channel_id already exists
+    check_query = f"select count(*) from channels where channel_id = '{channel_id}'"
+    mycursor.execute(check_query)
+    result = mycursor.fetchone()
+
+    if result[0] > 0:
+        return 'Channel ID Already Existing.'
+    
+    else:
+        channel_table(channel_id)
+        playlist_table(channel_id)
+        comment_list_table(channel_id)
+        videolist_table(channel_id)
+        return 'Channel ID Migrated Successfully.'
+
 
 #creating function to display table for channel details,playlist,video details & comments
 
@@ -518,12 +542,24 @@ if st.button("collecting & storing data"):
         inserted=channel_info(channel_id)
         st.success(inserted)
 
+#creating dropdown to select channel_id to migrate to sql
+
+connection = pymongo.MongoClient("mongodb://localhost:27017/")
+db = connection['youtube1']
+col = db['ychannel_details']
+
+show_channels = col.distinct("channel_information.channel_id", {"channel_information.channel_id": {"$exists": True}})
+
+channel_options = [channel_id for channel_id in show_channels]
+
+Selected_Channel_Id=st.selectbox('select id to migrate',channel_options)
 
 #creating button for migrating data to SQL
 
 if st.button("Migrate To SQL"):
-    Table_view=sql_tables()
-    st.success(Table_view)
+    Table=sql_tables(Selected_Channel_Id)
+    st.success(Table)
+
 
 show_table=st.radio("Select Table to view",("Channels","Playlists","Videos","Comments"))
 
@@ -606,7 +642,6 @@ elif questions=="5.videos having highest number of likes, and its channel name":
 
 elif questions=="6.Number of likes for each video, and its video name ":
     qus6='''select likes as likescount,title as videotitle from videolists where likes is not null'''
-                
     mycursor.execute(qus6)
     q6=mycursor.fetchall()
     dff6=pd.DataFrame(q6,columns=['no of likes','video title'])
@@ -629,7 +664,6 @@ elif questions=="8.channels that have published videos in 2022":
 
 elif questions=="9.average duration of all videos in each channel and channel name":
     qus9='''select channel_name as channelname,AVG(duration) as averageduration from videolists group by channel_name'''
-                
     mycursor.execute(qus9)
     q9=mycursor.fetchall()
     dff9=pd.DataFrame(q9,columns=['channelname','averageduration'])
@@ -640,7 +674,6 @@ elif questions=="9.average duration of all videos in each channel and channel na
         average_duration=row['averageduration']
         average_duration_str=str(average_duration)
         t9.append(dict(channeltitle=channel_title,averagduration=average_duration_str))
-    
     dfff9=pd.DataFrame(t9)
     st.write(dfff9)
 
@@ -648,52 +681,8 @@ elif questions=="9.average duration of all videos in each channel and channel na
 elif questions=="10.videos having highest number of comments and its channel name":
     qus10='''select channel_name as channelname,title as videoname,comments as comments from videolists
                 where comments is not null order by comments desc'''
-                
     mycursor.execute(qus10)
-    
     q10=mycursor.fetchall()
     dff10=pd.DataFrame(q10,columns=['channel name','video name','no of comments'])
     st.write(dff10)
-    
-    
-    
-    
-
-
-    
-
-    
-    
-
-    
-        
-
-
-                                                        
-
-                                                        
-
-
-
-
-
-
-
-
-
-    
-    
-
-
-
-    
-                                                            
-                                                        
-    
-
-    
-    
-
-
-    
     
